@@ -1,5 +1,6 @@
 <?php
 
+// Archivo de configuración para la conexión a la base de datos
 class Database
 {
     private $host = "127.0.0.1";
@@ -10,10 +11,11 @@ class Database
 
     public $conn;
 
+    // Método para obtener la conexión a la base de datos
     public function getConnection()
     {
         $this->conn = null;
-
+        // Intentamos establecer la conexión usando PDO
         try {
             $dsn = "mysql:host=" . $this->host . ";port=" . $this->port . ";dbname=" . $this->db_name;
             $this->conn = new PDO($dsn, $this->username, $this->password);
