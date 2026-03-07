@@ -1,0 +1,5 @@
+# Ignorar archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Aquí ignoraremos más adelante archivos sensibles si hiciera falta
