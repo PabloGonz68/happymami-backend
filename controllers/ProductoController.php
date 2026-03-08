@@ -32,6 +32,29 @@ class ProductoController
                         http_response_code(500); // Internal Server Error
                         echo json_encode(["error" => "Error de base de datos: " . $e->getMessage()], JSON_UNESCAPED_UNICODE);
                     }
+                } elseif (is_numeric($accion)) {
+                    // Lógica para obtener un producto específico por ID
+                    try {
+                        // Preparamos la consulta SQL para obtener un producto por su ID
+                        $query = "SELECT id, nombre, descripcion, precio_actual, stock FROM productos WHERE id = :id";
+                        $stmt = $this->conn->prepare($query);
+
+                        $stmt->bindParam(':id', $accion);
+                        $stmt->execute();
+                        // Usamos fetch() en singular. Si lo encuentra, devuelve el array; si no, devuelve false.
+                        $producto = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                        if ($producto) {
+                            http_response_code(200); // OK
+                            echo json_encode($producto, JSON_UNESCAPED_UNICODE);
+                        } else {
+                            http_response_code(404); // Not Found
+                            echo json_encode(["message" => "Producto no encontrado"], JSON_UNESCAPED_UNICODE);
+                        }
+                    } catch (PDOException $e) {
+                        http_response_code(500); // Internal Server Error
+                        echo json_encode(["error" => "Error de base de datos: " . $e->getMessage()], JSON_UNESCAPED_UNICODE);
+                    }
                 } else {
                     http_response_code(404);
                     echo json_encode(["error" => "Acción no encontrada"], JSON_UNESCAPED_UNICODE);
