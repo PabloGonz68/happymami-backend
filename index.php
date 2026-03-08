@@ -4,6 +4,7 @@ header("Content-Type: application/json; charset=UTF-8");
 
 require_once 'config/database.php';
 require_once 'controllers/ProductoController.php';
+require_once 'controllers/ClienteController.php';
 
 $database = new Database();
 $db = $database->getConnection();
@@ -29,7 +30,12 @@ switch ($recurso) {
         break;
 
     case 'clientes':
-        echo " ¡Has llegado a la seccion de clientes!";
+        // Creamos el controlador pasándole la conexión
+        $clienteController = new ClienteController($db);
+        // Capturamos la acción solicitada (si existe)
+        $accion = isset($uriParts[4]) ? $uriParts[4] : null;
+        // Llamamos al método del controlador que procesa la petición   
+        $clienteController->procesarPeticion($metodo, $accion);
         break;
 
     case 'pedidos':
