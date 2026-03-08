@@ -153,6 +153,35 @@ class ProductoController
                     echo json_encode(["error" => "Acción no encontrada"], JSON_UNESCAPED_UNICODE);
                 }
                 break;
+            case 'DELETE':
+                if (is_numeric($accion)) {
+                    // Lógica para eliminar un producto específico por ID
+                    try {
+                        // Preparamos la consulta SQL para eliminar un producto por su ID
+                        $query = "DELETE FROM productos WHERE id = :id";
+                        $stmt = $this->conn->prepare($query);
+                        $stmt->bindParam(':id', $accion);
+                        if ($stmt->execute()) {
+                            if ($stmt->rowCount() > 0) {
+                                http_response_code(200); // OK
+                                echo json_encode(["message" => "Producto eliminado exitosamente"], JSON_UNESCAPED_UNICODE);
+                            } else {
+                                http_response_code(404); // Not Found
+                                echo json_encode(["message" => "Producto no encontrado"], JSON_UNESCAPED_UNICODE);
+                            }
+                        } else {
+                            http_response_code(503); // Internal Server Error
+                            echo json_encode(["error" => "Error al eliminar el producto"], JSON_UNESCAPED_UNICODE);
+                        }
+                    } catch (PDOException $e) {
+                        http_response_code(500); // Internal Server Error
+                        echo json_encode(["error" => "Error de base de datos: " . $e->getMessage()], JSON_UNESCAPED_UNICODE);
+                    }
+                } else {
+                    http_response_code(404);
+                    echo json_encode(["error" => "Acción no encontrada"], JSON_UNESCAPED_UNICODE);
+                }
+                break;
             default:
                 http_response_code(405); // Método no permitido
                 echo json_encode(["error" => "Método HTTP no permitido"], JSON_UNESCAPED_UNICODE);
