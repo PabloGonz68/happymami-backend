@@ -15,7 +15,23 @@ class ProductoController
         switch ($metodo) {
             case 'GET':
                 if ($accion == 'listar' || $accion == null) {
-                    echo "Listando productos...";
+                    try {
+                        $query = "SELECT id, nombre, descripcion, precio_actual, stock FROM productos";
+                        $stmt = $this->conn->prepare($query);
+                        $stmt->execute();
+                        $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                        if (count($productos) > 0) {
+                            http_response_code(200); // OK
+                            echo json_encode($productos, JSON_UNESCAPED_UNICODE);
+                        } else {
+                            http_response_code(404); // Not Found
+                            echo json_encode(["message" => "No se encontraron productos"], JSON_UNESCAPED_UNICODE);
+                        }
+                    } catch (PDOException $e) {
+                        http_response_code(500); // Internal Server Error
+                        echo json_encode(["error" => "Error de base de datos: " . $e->getMessage()], JSON_UNESCAPED_UNICODE);
+                    }
                 } else {
                     http_response_code(404);
                     echo json_encode(["error" => "Acción no encontrada"], JSON_UNESCAPED_UNICODE);
