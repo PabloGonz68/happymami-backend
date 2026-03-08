@@ -22,7 +22,7 @@ switch ($recurso) {
     case 'productos':
         // Creamos el controlador pasándole la conexión
         $productoController = new ProductoController($db);
-        //
+        // Capturamos la acción solicitada (si existe)
         $accion = isset($uriParts[4]) ? $uriParts[4] : null;
         // Llamamos al método del controlador que procesa la petición
         $productoController->procesarPeticion($metodo, $accion);
