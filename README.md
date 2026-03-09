@@ -1,5 +1,8 @@
 # Prueba Técnica Backend - Happymami
 
+    Nombre: Pablo González Silva
+    Fecha de entrega: 10/03/2026
+
 Desarrollo del backend simplificado para el sistema de gestión de pedidos de Happymami, construido en **PHP puro** y **MySQL**, sin el uso de frameworks pesados, primando la estructuración clara, el control transaccional y el diseño relacional.
 
 ## Instrucciones para levantar el proyecto
