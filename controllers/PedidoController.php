@@ -12,6 +12,71 @@ class PedidoController
     {
         switch ($metodo) {
             case 'GET':
+                // Si la acción es un número, asumimos que quieren un pedido específico
+                if (is_numeric($accion)) {
+                    try {
+                        // Primero obtenemos la información general del pedido
+                        $queryPedido = "SELECT id, cliente_id, fecha_pedido, estado, notas FROM pedidos WHERE id = :id";
+                        $stmtPedido = $this->conn->prepare($queryPedido);
+                        $stmtPedido->bindParam(':id', $accion);
+                        $stmtPedido->execute();
+                        //Obtener el pedido como un array asociativo
+                        $pedido = $stmtPedido->fetch(PDO::FETCH_ASSOC);
+                        // Si el pedido existe, obtenemos sus detalles
+                        if ($pedido) {
+                            $queryDetalles = "SELECT producto_id, cantidad, precio_unitario 
+                                              FROM detalles_pedido 
+                                              WHERE pedido_id = :pedido_id";
+                            $stmtDetalles = $this->conn->prepare($queryDetalles);
+                            $stmtDetalles->bindParam(':pedido_id', $accion);
+                            $stmtDetalles->execute();
+                            $detalles = $stmtDetalles->fetchAll(PDO::FETCH_ASSOC);
+                            // Agregamos los detalles al pedido
+                            $pedido['detalles'] = $detalles;
+
+                            // Devolver el pedido con sus detalles
+                            http_response_code(200);
+                            echo json_encode($pedido, JSON_UNESCAPED_UNICODE);
+                        } else {
+                            http_response_code(404);
+                            echo json_encode(["error" => "El pedido número $accion no existe."], JSON_UNESCAPED_UNICODE);
+                        }
+                    } catch (Exception $e) {
+                        http_response_code(500);
+                        echo json_encode(["error" => "Error al obtener el pedido: " . $e->getMessage()]);
+                    }
+                }
+
+                if ($accion == null || $accion == 'listar') {
+                    try {
+                        $queryPedidos = "SELECT id, cliente_id, fecha_pedido, estado, notas FROM pedidos";
+                        $stmtPedidos = $this->conn->prepare($queryPedidos);
+                        $stmtPedidos->execute();
+                        $pedidos = $stmtPedidos->fetchAll(PDO::FETCH_ASSOC);
+
+                        if (count($pedidos) > 0) {
+                            foreach ($pedidos as &$pedido) {
+                                $queryDetalles = "SELECT producto_id, cantidad, precio_unitario 
+                                                  FROM detalles_pedido 
+                                                  WHERE pedido_id = :pedido_id";
+                                $stmtDetalles = $this->conn->prepare($queryDetalles);
+                                $stmtDetalles->bindParam(':pedido_id', $pedido['id']);
+                                $stmtDetalles->execute();
+                                $detalles = $stmtDetalles->fetchAll(PDO::FETCH_ASSOC);
+                                $pedido['detalles'] = $detalles;
+                            }
+                            http_response_code(200);
+                            echo json_encode($pedidos, JSON_UNESCAPED_UNICODE);
+                        } else {
+                            http_response_code(200);
+                            echo json_encode(["message" => "No hay pedidos registrados."], JSON_UNESCAPED_UNICODE);
+                        }
+                    } catch (Exception $e) {
+                        http_response_code(500);
+                        echo json_encode(["error" => "Error al obtener los pedidos: " . $e->getMessage()]);
+                    }
+                }
+
                 break;
             case 'POST':
                 if ($accion == 'crear' || $accion == null) {
