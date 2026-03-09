@@ -177,6 +177,36 @@ class PedidoController
                 }
                 break;
             case 'DELETE':
+                // Solo permitimos borrar si nos pasan el ID en la URL (ej: /pedidos/6)
+                if (is_numeric($accion)) {
+                    try {
+                        //Solo borramos de 'pedidos'. 
+                        // MySQL se encarga de eliminar los 'detalles_pedido' en cascada automáticamente.
+                        $query = "DELETE FROM pedidos WHERE id = :id";
+                        $stmt = $this->conn->prepare($query);
+                        $stmt->bindParam(':id', $accion);
+
+                        if ($stmt->execute()) {
+                            // Comprobamos si realmente se borró alguna fila
+                            if ($stmt->rowCount() > 0) {
+                                http_response_code(200);
+                                echo json_encode(["message" => "Pedido y todos sus detalles eliminados exitosamente."], JSON_UNESCAPED_UNICODE);
+                            } else {
+                                http_response_code(404);
+                                echo json_encode(["message" => "El pedido no existe o ya fue eliminado."], JSON_UNESCAPED_UNICODE);
+                            }
+                        } else {
+                            http_response_code(503);
+                            echo json_encode(["error" => "Error al eliminar el pedido."], JSON_UNESCAPED_UNICODE);
+                        }
+                    } catch (PDOException $e) {
+                        http_response_code(500);
+                        echo json_encode(["error" => "Error de base de datos: " . $e->getMessage()], JSON_UNESCAPED_UNICODE);
+                    }
+                } else {
+                    http_response_code(400);
+                    echo json_encode(["error" => "Falta indicar el ID del pedido a eliminar en la URL."], JSON_UNESCAPED_UNICODE);
+                }
                 break;
             default:
                 http_response_code(405); // Method Not Allowed
