@@ -131,6 +131,50 @@ class PedidoController
                 }
                 break;
             case 'PUT':
+                // Solo permitimos actualizar si nos pasan el ID del pedido en la URL (ej: /pedidos/6)
+                if (is_numeric($accion)) {
+                    $jsonRecibido = file_get_contents("php://input");
+                    $datos = json_decode($jsonRecibido);
+
+                    // Validamos que al menos nos manden el nuevo estado
+                    if (!empty($datos->estado)) {
+                        try {
+                            // Preparamos el UPDATE solo para la tabla pedidos
+                            $query = "UPDATE pedidos SET estado = :estado, notas = :notas WHERE id = :id";
+                            $stmt = $this->conn->prepare($query);
+
+                            // Mantenemos las notas si nos las mandan, si no, lo dejamos vacío
+                            $notas = isset($datos->notas) ? $datos->notas : "";
+
+                            $stmt->bindParam(':estado', $datos->estado);
+                            $stmt->bindParam(':notas', $notas);
+                            $stmt->bindParam(':id', $accion);
+
+                            if ($stmt->execute()) {
+                                // rowCount() nos dice cuántas filas fueron afectadas por el UPDATE
+                                if ($stmt->rowCount() > 0) {
+                                    http_response_code(200);
+                                    echo json_encode(["message" => "Estado del pedido actualizado exitosamente."], JSON_UNESCAPED_UNICODE);
+                                } else {
+                                    http_response_code(200);
+                                    echo json_encode(["mensaje" => "No se hicieron cambios (el estado ya era ese o el ID no existe)."], JSON_UNESCAPED_UNICODE);
+                                }
+                            } else {
+                                http_response_code(503);
+                                echo json_encode(["error" => "Error al actualizar el pedido"], JSON_UNESCAPED_UNICODE);
+                            }
+                        } catch (PDOException $e) {
+                            http_response_code(500);
+                            echo json_encode(["error" => "Error de base de datos: " . $e->getMessage()], JSON_UNESCAPED_UNICODE);
+                        }
+                    } else {
+                        http_response_code(400);
+                        echo json_encode(["error" => "Falta indicar el nuevo estado del pedido."], JSON_UNESCAPED_UNICODE);
+                    }
+                } else {
+                    http_response_code(400);
+                    echo json_encode(["error" => "Falta el ID del pedido en la URL."], JSON_UNESCAPED_UNICODE);
+                }
                 break;
             case 'DELETE':
                 break;
